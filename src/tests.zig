@@ -4,20 +4,14 @@ const ParserErr = parserLib.ParserErr;
 
 const std = @import("std");
 const testing = std.testing;
-const alloc = testing.allocator;
-const expect = testing.expect;
 const expectEqual = testing.expectEqual;
 const expectEqualStrings = testing.expectEqualStrings;
 const expectError = testing.expectError;
 
-test "builtin.is_test (this should always work)" {
-    try expect(std.builtin.is_test);
-}
-
 test "failing parser fail" {
     const input = "something";
-    const fail = parserLib.FailP(u8).init();
-    const ret = fail.parser.parse(input);
+    const failp = parserLib.FailP(u8).init();
+    const ret = failp.parser.parse(input);
     try expectError(ParserErr.ParserFailed, ret.data);
 }
 
@@ -63,24 +57,20 @@ test "sequence parser fail" {
 }
 
 test "string parser ok" {
-    const StringP = parserLib.StringP;
-
     const input = "something";
     const target = "somet";
 
-    const strP = StringP(target.len).init(target);
+    const strP = parserLib.StringP(target.len).init(target);
     const ret = try strP.parser.parse(input).data;
     try expectEqualStrings(target, &ret.val);
     try expectEqualStrings("hing", ret.rest);
 }
 
 test "string parser fail" {
-    const StringP = parserLib.StringP;
-
     const input = "something";
     const target = "omet";
 
-    const strP = StringP(target.len).init(target);
+    const strP = parserLib.StringP(target.len).init(target);
     const ret = strP.parser.parse(input);
     try expectError(ParserErr.ParserFailed, ret.data);
 }

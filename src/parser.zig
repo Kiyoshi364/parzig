@@ -1,7 +1,4 @@
-const std = @import("std");
-const Alloc = std.mem.Allocator;
-
-pub fn parseFunc(comptime T: type) type {
+pub fn ParseFunc(comptime T: type) type {
     return fn(self: *const Parser(T), input: []const u8) MaybeParsed(T);
 }
 
@@ -9,7 +6,7 @@ pub fn Parser(comptime Val: type) type {
     return struct {
         const Self = @This();
 
-        parseFn: parseFunc(Val),
+        parseFn: ParseFunc(Val),
 
         pub fn parse(self: *const Self, input: []const u8) MaybeParsed(Val) {
             return self.parseFn(self, input);
@@ -41,10 +38,10 @@ pub fn FailP(comptime T: type) type {
         parser: Parser(T),
 
         pub fn init() @This() {
-            return .{ .parser = .{ .parseFn = fail } };
+            return .{ .parser = .{ .parseFn = failp } };
         }
 
-        fn fail(parser: *const Parser(T), input: []const u8) MaybeParsed(T) {
+        fn failp(parser: *const Parser(T), input: []const u8) MaybeParsed(T) {
             _ = parser; _ = input;
             return .{ .data = ParserErr.ParserFailed };
         }
@@ -52,7 +49,6 @@ pub fn FailP(comptime T: type) type {
 }
 
 pub const CharP = struct {
-
     char: u8,
     parser: Parser(u8),
 
@@ -65,10 +61,7 @@ pub const CharP = struct {
         if ( input.len < 1 or input[0] != char ) {
             return .{ .data = ParserErr.ParserFailed };
         }
-        return .{ .data = .{
-            .val = char,
-            .rest = input[1..],
-        }};
+        return .{ .data = .{ .val = char, .rest = input[1..], }};
     }
 };
 
@@ -91,10 +84,7 @@ pub fn SequenceP(comptime T: type, comptime n: comptime_int) type {
                 curr_in = res.rest;
                 values[i] = res.val;
             }
-            return .{ .data = .{
-                    .val = values,
-                    .rest = curr_in,
-                }};
+            return .{ .data = .{ .val = values, .rest = curr_in }};
         }
     };
 }
@@ -126,9 +116,7 @@ pub fn StringP(comptime n: comptime_int) type {
                 }
                 break :blk parsers;
             };
-
             return SequenceP(u8, n).init(parsers).parser.parse(input);
         }
-
     };
 }
