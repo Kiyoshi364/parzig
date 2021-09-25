@@ -48,6 +48,22 @@ pub fn FailP(comptime T: type) type {
     };
 }
 
+pub fn ConstP(comptime T: type) type {
+    return struct {
+        thing: T,
+        parser: Parser(T),
+
+        pub fn init(thing: T) @This() {
+            return .{ .thing = thing, .parser = .{ .parseFn = constp } };
+        }
+
+        fn constp(parser: *const Parser(T), input: []const u8) MaybeParsed(T) {
+            const thing = @fieldParentPtr(@This(), "parser", parser).thing;
+            return .{ .data = .{ .val = thing, .rest = input } };
+        }
+    };
+}
+
 pub const CharP = struct {
     char: u8,
     parser: Parser(u8),

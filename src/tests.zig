@@ -15,6 +15,14 @@ test "failing parser fail" {
     try expectError(ParserErr.ParserFailed, ret.data);
 }
 
+test "const parser ok" {
+    const input = "something";
+    const constp = parserLib.ConstP(bool).init(true);
+    const ret = try constp.parser.parse(input).data;
+    try expectEqual(true, ret.val);
+    try expectEqualStrings(input, ret.rest);
+}
+
 test "char parser ok" {
     const input = "something";
     const charP = parserLib.CharP.init('s');
