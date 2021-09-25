@@ -136,3 +136,23 @@ pub fn StringP(comptime n: comptime_int) type {
         }
     };
 }
+
+pub const WhileTrueP = ScanP;
+pub const ScanP = struct {
+    pred: fn(u8) bool,
+    parser: Parser([]const u8),
+
+    pub fn init(pred: fn(u8) bool) @This() {
+        return .{ .pred = pred, .parser = .{ .parseFn = scanp } };
+    }
+
+    fn scanp(parser: *const Parser([]const u8), input: []const u8) MaybeParsed([]const u8) {
+        const pred = @fieldParentPtr(@This(), "parser", parser).pred;
+        for (input) |char, i| {
+            if ( !pred(char) )
+                return .{ .data = .{ .val = input[0..i], .rest = input[i..] } };
+        } else {
+            return .{ .data = .{ .val = input[0..], .rest = "" } };
+        }
+    }
+};

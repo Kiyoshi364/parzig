@@ -82,3 +82,25 @@ test "string parser fail" {
     const ret = strP.parser.parse(input);
     try expectError(ParserErr.ParserFailed, ret.data);
 }
+
+test "scanp parser ok" {
+    const input = "aAabaAa";
+    const func = isA;
+
+    const scanp = parserLib.ScanP.init(func);
+    const ret = try scanp.parser.parse(input).data;
+    try expectEqualStrings("aAa", ret.val);
+    try expectEqualStrings("baAa", ret.rest);
+}
+fn isA(c: u8) bool { return c == 'a' or c == 'A'; }
+
+test "scanp parser everything" {
+    const input = "everything";
+    const func = isLowerAlph;
+
+    const scanp = parserLib.ScanP.init(func);
+    const ret = try scanp.parser.parse(input).data;
+    try expectEqualStrings(input, ret.val);
+    try expectEqualStrings("", ret.rest);
+}
+fn isLowerAlph(c: u8) bool { return 'a' <= c and c <= 'z'; }
