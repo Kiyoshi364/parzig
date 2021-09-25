@@ -83,6 +83,26 @@ test "string parser fail" {
     try expectError(ParserErr.ParserFailed, ret.data);
 }
 
+test "predicated parser ok" {
+    const input = "aAabaAa";
+    const func = isA;
+
+    const predp = parserLib.PredicatedP.init(func);
+    const ret = try predp.parser.parse(input).data;
+    try expectEqual(@intCast(u8, 'a'), ret.val);
+    try expectEqualStrings("AabaAa", ret.rest);
+}
+fn isA(c: u8) bool { return c == 'a' or c == 'A'; }
+
+test "predicated parser fail" {
+    const input = "bAabaAa";
+    const func = isA;
+
+    const predp = parserLib.PredicatedP.init(func);
+    const ret = predp.parser.parse(input).data;
+    try expectError(ParserErr.ParserFailed, ret);
+}
+
 test "scanp parser ok" {
     const input = "aAabaAa";
     const func = isA;
@@ -92,7 +112,6 @@ test "scanp parser ok" {
     try expectEqualStrings("aAa", ret.val);
     try expectEqualStrings("baAa", ret.rest);
 }
-fn isA(c: u8) bool { return c == 'a' or c == 'A'; }
 
 test "scanp parser everything" {
     const input = "everything";

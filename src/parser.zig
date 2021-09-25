@@ -133,6 +133,25 @@ pub const StringP = struct {
     }
 };
 
+pub const IfTrueP = ScanP;
+pub const PredicatedP = struct {
+    pred: fn(u8) bool,
+    parser: Parser(u8),
+
+    pub fn init(pred: fn(u8) bool) @This() {
+        return .{ .pred = pred, .parser = .{ .parseFn = predp } };
+    }
+
+    fn predp(parser: *const Parser(u8), input: []const u8) MaybeParsed(u8) {
+        const pred = @fieldParentPtr(@This(), "parser", parser).pred;
+        if ( pred(input[0]) ) {
+            return .{ .data = .{ .val = input[0], .rest = input[1..] } };
+        } else {
+            return .{ .data = ParserErr.ParserFailed };
+        }
+    }
+};
+
 pub const WhileTrueP = ScanP;
 pub const ScanP = struct {
     pred: fn(u8) bool,
