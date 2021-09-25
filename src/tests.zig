@@ -44,7 +44,7 @@ test "sequence parser ok" {
     const charps = [_]CharP{ CharP.init('s'), CharP.init('o') };
     const parserArr = [_]*const Parser(u8){ &charps[0].parser, &charps[1].parser };
 
-    const seqP = parserLib.SequenceP(u8, 2).init(parserArr);
+    const seqP = parserLib.SequenceP(u8, 2).init(&parserArr);
     const ret = try seqP.parser.parse(input).data;
 
     try expectEqual([_]u8{'s', 'o'}, ret.val);
@@ -58,7 +58,7 @@ test "sequence parser fail" {
     const charps = [_]CharP{ CharP.init('o'), CharP.init('m') };
     const parserArr = [_]*const Parser(u8){ &charps[0].parser, &charps[1].parser };
 
-    const seqP = parserLib.SequenceP(u8, 2).init(parserArr);
+    const seqP = parserLib.SequenceP(u8, 2).init(&parserArr);
     const ret = seqP.parser.parse(input).data;
 
     try expectError(ParserErr.ParserFailed, ret);
@@ -68,9 +68,9 @@ test "string parser ok" {
     const input = "something";
     const target = "somet";
 
-    const strP = parserLib.StringP(target.len).init(target);
+    const strP = parserLib.StringP.init(target);
     const ret = try strP.parser.parse(input).data;
-    try expectEqualStrings(target, &ret.val);
+    try expectEqualStrings(target, ret.val);
     try expectEqualStrings("hing", ret.rest);
 }
 
@@ -78,7 +78,7 @@ test "string parser fail" {
     const input = "something";
     const target = "omet";
 
-    const strP = parserLib.StringP(target.len).init(target);
+    const strP = parserLib.StringP.init(target);
     const ret = strP.parser.parse(input);
     try expectError(ParserErr.ParserFailed, ret.data);
 }
@@ -171,32 +171,32 @@ test "applied parser fail" {
     try expectError(ParserErr.ParserFailed, ret);
 }
 
-test "applied parser2(0) ok" {
-    const ConstP = parserLib.ConstP;
-    const CharP = parserLib.CharP;
-
-    const input = "something";
-    const funcp = &ConstP(fn(u8) i8).init(sub11).parser;
-    const base = &CharP.init('s').parser;
-
-    @import("std").debug.print("\n", .{});
-
-    const appliedp = parserLib.AppliedP2(u8, i8, 0).init(funcp, base);
-    const ret = try appliedp.parser.parse(input).data;
-    try expectEqual(@intCast(i8, 'h'), ret.val);
-    try expectEqualStrings("omething", ret.rest);
-}
-
-test "applied parser2(1) ok" {
-    const ConstP = parserLib.ConstP;
-    const CharP = parserLib.CharP;
-
-    const input = "something";
-    const funcp = &ConstP(fn(u8) i8).init(sub11).parser;
-    const base = &CharP.init('s').parser;
-
-    const appliedp = parserLib.AppliedP2(u8, i8, 1).init(funcp, base);
-    const ret = try appliedp.parser.parse(input).data;
-    try expectEqual(@intCast(i8, 'h'), ret.val);
-    try expectEqualStrings("omething", ret.rest);
-}
+//test "applied parser2(0) ok" {
+//    const ConstP = parserLib.ConstP;
+//    const CharP = parserLib.CharP;
+//
+//    const input = "something";
+//    const funcp = &ConstP(fn(u8) i8).init(sub11).parser;
+//    const base = &CharP.init('s').parser;
+//
+//    @import("std").debug.print("\n", .{});
+//
+//    const appliedp = parserLib.AppliedP2(u8, i8, 0).init(funcp, base);
+//    const ret = try appliedp.parser.parse(input).data;
+//    try expectEqual(@intCast(i8, 'h'), ret.val);
+//    try expectEqualStrings("omething", ret.rest);
+//}
+//
+//test "applied parser2(1) ok" {
+//    const ConstP = parserLib.ConstP;
+//    const CharP = parserLib.CharP;
+//
+//    const input = "something";
+//    const funcp = &ConstP(fn(u8) i8).init(sub11).parser;
+//    const base = &CharP.init('s').parser;
+//
+//    const appliedp = parserLib.AppliedP2(u8, i8, 1).init(funcp, base);
+//    const ret = try appliedp.parser.parse(input).data;
+//    try expectEqual(@intCast(i8, 'h'), ret.val);
+//    try expectEqualStrings("omething", ret.rest);
+//}

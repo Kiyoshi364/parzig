@@ -1,5 +1,5 @@
 pub fn ParseFunc(comptime T: type) type {
-    return fn(self: *const Parser(T), input: []const u8) MaybeParsed(T);
+    return fn(*const Parser(T), []const u8) MaybeParsed(T);
 }
 
 pub fn Parser(comptime Val: type) type {
@@ -88,10 +88,10 @@ pub const CharP = struct {
 
 pub fn SequenceP(comptime T: type, comptime n: comptime_int) type {
     return struct {
-        parsers: [n]*const Parser(T),
+        parsers: *const [n]*const Parser(T),
         parser: Parser([n]T),
 
-        pub fn init(parsers: [n]*const Parser(T)) @This() {
+        pub fn init(parsers: *const [n]*const Parser(T)) @This() {
             return .{ .parsers = parsers, .parser = .{ .parseFn = seqp } };
         }
 
@@ -99,8 +99,9 @@ pub fn SequenceP(comptime T: type, comptime n: comptime_int) type {
             const self = @fieldParentPtr(@This(), "parser", parser);
             var values: [n]T = undefined;
             var curr_in = input;
-            for (self.parsers) |p, i| {
-                const res = p.parse(curr_in).data catch
+            var i: usize = 0;
+            while ( i < self.parsers.len ) : ( i += 1 ) {
+                const res = self.parsers[i].parse(curr_in).data catch
                     return .{ .data = ParserErr.ParserFailed };
                 curr_in = res.rest;
                 values[i] = res.val;
@@ -110,37 +111,27 @@ pub fn SequenceP(comptime T: type, comptime n: comptime_int) type {
     };
 }
 
-pub fn StringP(comptime n: comptime_int) type {
-    return struct {
-        str: []const u8,
-        parser: Parser([n]u8),
+pub const StringP = struct {
+    str: []const u8,
+    parser: Parser([]const u8),
 
-        pub fn init(str: []const u8) @This() {
-            @import("std").debug.assert(str.len <= n);
-            return .{ .str = str, .parser = .{ .parseFn = strp } };
+    pub fn init(str: []const u8) @This() {
+        return .{ .str = str, .parser = .{ .parseFn = strp } };
+    }
+
+    fn strp(parser: *const Parser([]const u8), input: []const u8) MaybeParsed([]const u8) {
+        const str = @fieldParentPtr(@This(), "parser", parser).str;
+        const n = str.len;
+        if ( n > input.len ) {
+            return .{ .data = ParserErr.ParserFailed };
         }
-
-        fn strp(parser: *const Parser([n]u8), input: []const u8) MaybeParsed([n]u8) {
-            const self = @fieldParentPtr(@This(), "parser", parser);
-            const charPs: [n]CharP = blk: {
-                var _charPs: [n]CharP = undefined;
-                for (self.str) |char, i| {
-                    _charPs[i] = CharP.init(char);
-                }
-                break :blk _charPs;
-            };
-
-            const parsers: [n]*const Parser(u8) = blk: {
-                var parsers: [n]*const Parser(u8) = undefined;
-                for (charPs) |*charP, i| {
-                   parsers[i] = &charP.parser;
-                }
-                break :blk parsers;
-            };
-            return SequenceP(u8, n).init(parsers).parser.parse(input);
+        for (str) |c, i| {
+            if ( c != input[i] )
+                return .{ .data = ParserErr.ParserFailed };
         }
-    };
-}
+        return .{ .data = .{ .val = input[0..n], .rest = input[n..] } };
+    }
+};
 
 pub const WhileTrueP = ScanP;
 pub const ScanP = struct {
