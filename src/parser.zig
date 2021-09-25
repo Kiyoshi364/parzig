@@ -11,6 +11,10 @@ pub fn Parser(comptime Val: type) type {
         pub fn parse(self: *const Self, input: []const u8) MaybeParsed(Val) {
             return self.parseFn(self, input);
         }
+
+        pub fn fmap(self: *const Self, comptime T: type, func: fn(Val) T) MappedP(Val, T) {
+            return MappedP(Val, T).init(func, self);
+         }
     };
 }
 
@@ -156,3 +160,24 @@ pub const ScanP = struct {
         }
     }
 };
+
+pub fn MappedP(comptime A: type, comptime B: type) type {
+    return struct {
+        func: fn(A) B,
+        base: *const Parser(A),
+        parser: Parser(B),
+
+        pub fn init(func: fn(A) B, base: *const Parser(A)) @This() {
+            return .{ .func = func, .base = base,
+                .parser = .{ .parseFn = mappedp } };
+        }
+
+        fn mappedp(parser: *const Parser(B), input: []const u8) MaybeParsed(B) {
+            const self = @fieldParentPtr(@This(), "parser", parser);
+            const ret = self.base.parse(input).data catch |err|
+                return .{ .data = err };
+            const b = self.func(ret.val);
+            return .{ .data = .{ .val = b, .rest = ret.rest } };
+        }
+    };
+}

@@ -104,3 +104,42 @@ test "scanp parser everything" {
     try expectEqualStrings("", ret.rest);
 }
 fn isLowerAlph(c: u8) bool { return 'a' <= c and c <= 'z'; }
+
+test "mapped parser ok" {
+    const CharP = parserLib.CharP;
+
+    const input = "something";
+    const func = sub11;
+    const base = &CharP.init('s').parser;
+
+    const mappedp = parserLib.MappedP(u8, i8).init(func, base);
+    const ret = try mappedp.parser.parse(input).data;
+    try expectEqual(@intCast(i8, 'h'), ret.val);
+    try expectEqualStrings("omething", ret.rest);
+}
+fn sub11(x: u8) i8 { return @intCast(i8, x) - 11; }
+
+test "mapped parser fail" {
+    const CharP = parserLib.CharP;
+
+    const input = "omething";
+    const func = sub11;
+    const base = &CharP.init('s').parser;
+
+    const mappedp = parserLib.MappedP(u8, i8).init(func, base);
+    const ret = mappedp.parser.parse(input).data;
+    try expectError(ParserErr.ParserFailed, ret);
+}
+
+test "Parser(T) is a functor!" {
+    const CharP = parserLib.CharP;
+
+    const input = "something";
+    const func = sub11;
+    const base = &CharP.init('s').parser;
+
+    const mappedp = base.fmap(i8, func);
+    const ret = try mappedp.parser.parse(input).data;
+    try expectEqual(@intCast(i8, 'h'), ret.val);
+    try expectEqualStrings("omething", ret.rest);
+}
