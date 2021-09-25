@@ -143,3 +143,60 @@ test "Parser(T) is a functor!" {
     try expectEqual(@intCast(i8, 'h'), ret.val);
     try expectEqualStrings("omething", ret.rest);
 }
+
+test "applied parser ok" {
+    const ConstP = parserLib.ConstP;
+    const CharP = parserLib.CharP;
+
+    const input = "something";
+    const funcp = &ConstP(fn(u8) i8).init(sub11).parser;
+    const base = &CharP.init('s').parser;
+
+    const appliedp = parserLib.AppliedP(u8, i8).init(funcp, base);
+    const ret = try appliedp.parser.parse(input).data;
+    try expectEqual(@intCast(i8, 'h'), ret.val);
+    try expectEqualStrings("omething", ret.rest);
+}
+
+test "applied parser fail" {
+    const FailP = parserLib.FailP;
+    const CharP = parserLib.CharP;
+
+    const input = "something";
+    const funcp = &FailP(fn(u8) i8).init().parser;
+    const base = &CharP.init('s').parser;
+
+    const appliedp = parserLib.AppliedP(u8, i8).init(funcp, base);
+    const ret = appliedp.parser.parse(input).data;
+    try expectError(ParserErr.ParserFailed, ret);
+}
+
+test "applied parser2(0) ok" {
+    const ConstP = parserLib.ConstP;
+    const CharP = parserLib.CharP;
+
+    const input = "something";
+    const funcp = &ConstP(fn(u8) i8).init(sub11).parser;
+    const base = &CharP.init('s').parser;
+
+    @import("std").debug.print("\n", .{});
+
+    const appliedp = parserLib.AppliedP2(u8, i8, 0).init(funcp, base);
+    const ret = try appliedp.parser.parse(input).data;
+    try expectEqual(@intCast(i8, 'h'), ret.val);
+    try expectEqualStrings("omething", ret.rest);
+}
+
+test "applied parser2(1) ok" {
+    const ConstP = parserLib.ConstP;
+    const CharP = parserLib.CharP;
+
+    const input = "something";
+    const funcp = &ConstP(fn(u8) i8).init(sub11).parser;
+    const base = &CharP.init('s').parser;
+
+    const appliedp = parserLib.AppliedP2(u8, i8, 1).init(funcp, base);
+    const ret = try appliedp.parser.parse(input).data;
+    try expectEqual(@intCast(i8, 'h'), ret.val);
+    try expectEqualStrings("omething", ret.rest);
+}

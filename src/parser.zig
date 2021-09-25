@@ -52,6 +52,7 @@ pub fn FailP(comptime T: type) type {
     };
 }
 
+pub const PureP = ConstP;
 pub fn ConstP(comptime T: type) type {
     return struct {
         thing: T,
@@ -178,6 +179,49 @@ pub fn MappedP(comptime A: type, comptime B: type) type {
                 return .{ .data = err };
             const b = self.func(ret.val);
             return .{ .data = .{ .val = b, .rest = ret.rest } };
+        }
+    };
+}
+
+pub fn AppliedP(comptime A: type, comptime B: type) type {
+    return AppliedP2(A, B, 2);
+}
+pub fn AppliedP2(comptime A: type, comptime B: type, comptime config: comptime_int) type {
+    return struct {
+        funcp: *const Parser(fn(A) B),
+        base: *const Parser(A),
+        parser: Parser(B),
+
+        pub fn init(funcp: *const Parser(fn(A) B), base: *const Parser(A)) @This() {
+            return .{ .funcp = funcp, .base = base,
+                .parser = .{ .parseFn = appliedp } };
+        }
+
+        fn appliedp(parser: *const Parser(B), input: []const u8) MaybeParsed(B) {
+            const self = @fieldParentPtr(@This(), "parser", parser);
+            const ret = self.funcp.parse(input).data catch |err|
+                return .{ .data = err };
+            switch ( config ) {
+                // fmap: Stack Overflow
+                0 => {
+                    const newparser = self.base.fmap(B, ret.val).parser;
+                    return newparser.parse(ret.rest);
+                },
+                // inlining fmap: Stack Overflow
+                1 => {
+                    const mapped = MappedP(A, B).init(ret.val, self.base);
+                    const newparser = mapped.parser;
+                    return newparser.parse(ret.rest);
+                },
+                // inlining MappedP
+                2 => {
+                    const ret2 = self.base.parse(ret.rest).data catch |err|
+                        return .{ .data = err };
+                    const b = ret.val(ret2.val);
+                    return .{ .data = .{ .val = b, .rest = ret2.rest } };
+                },
+                else => @compileError("invalid option for AppliedP2"),
+            }
         }
     };
 }
