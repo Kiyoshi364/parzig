@@ -71,10 +71,10 @@ pub fn FailP(comptime T: type) type {
         parser: Parser(T),
 
         pub fn init() @This() {
-            return .{ .parser = .{ .parseFn = failp } };
+            return .{ .parser = .{ .parseFn = parserFn } };
         }
 
-        fn failp(parser: *const Parser(T), input: Input) MaybeParsed(T) {
+        fn parserFn(parser: *const Parser(T), input: Input) MaybeParsed(T) {
             _ = parser;
             return .{ .err = input.err() };
         }
@@ -87,10 +87,10 @@ pub fn ConstP(comptime T: type) type {
         parser: Parser(T),
 
         pub fn init(thing: T) @This() {
-            return .{ .thing = thing, .parser = .{ .parseFn = constp } };
+            return .{ .thing = thing, .parser = .{ .parseFn = parserFn } };
         }
 
-        fn constp(parser: *const Parser(T), input: Input) MaybeParsed(T) {
+        fn parserFn(parser: *const Parser(T), input: Input) MaybeParsed(T) {
             const thing = @fieldParentPtr(@This(), "parser", parser).thing;
             return .{ .data = .{ .val = thing, .rest = input } };
         }
@@ -102,10 +102,10 @@ pub const CharP = struct {
     parser: Parser(u8),
 
     pub fn init(char: u8) @This() {
-        return .{ .char = char, .parser = .{ .parseFn = charp } };
+        return .{ .char = char, .parser = .{ .parseFn = parserFn } };
     }
 
-    fn charp(parser: *const Parser(u8), input: Input) MaybeParsed(u8) {
+    fn parserFn(parser: *const Parser(u8), input: Input) MaybeParsed(u8) {
         const char = @fieldParentPtr(@This(), "parser", parser).char;
         const str = input.str;
         if ( str.len == 0 or char != str[0] )
@@ -119,10 +119,10 @@ pub const PredP = struct {
     parser: Parser(u8),
 
     pub fn init(pred: fn(u8) bool) @This() {
-        return .{ .pred = pred, .parser = .{ .parseFn = predp } };
+        return .{ .pred = pred, .parser = .{ .parseFn = parserFn } };
     }
 
-    fn predp(parser: *const Parser(u8), input: Input) MaybeParsed(u8) {
+    fn parserFn(parser: *const Parser(u8), input: Input) MaybeParsed(u8) {
         const pred = @fieldParentPtr(@This(), "parser", parser).pred;
         const str = input.str;
         if ( str.len == 0 or !pred(str[0]) )
@@ -137,10 +137,10 @@ pub fn OptionP(comptime T: type) type {
         parser: Parser(?T),
 
         pub fn init(base: *const Parser(T)) @This() {
-            return .{ .base = base, .parser = .{ .parseFn = optionp } };
+            return .{ .base = base, .parser = .{ .parseFn = parserFn } };
         }
 
-        fn optionp(parser: *const Parser(?T), input: Input) MaybeParsed(?T) {
+        fn parserFn(parser: *const Parser(?T), input: Input) MaybeParsed(?T) {
             const self = @fieldParentPtr(@This(), "parser", parser);
             const base = self.base;
             switch ( base.parse(input) ) {
@@ -160,10 +160,10 @@ pub fn MappedP(comptime A: type, comptime B: type) type {
 
         pub fn init(func: fn(A) B, base: *const Parser(A)) @This() {
             return .{ .func = func, .base = base,
-                .parser = .{ .parseFn = mappedp } };
+                .parser = .{ .parseFn = parserFn } };
         }
 
-        fn mappedp(parser: *const Parser(B), input: Input) MaybeParsed(B) {
+        fn parserFn(parser: *const Parser(B), input: Input) MaybeParsed(B) {
             const self = @fieldParentPtr(@This(), "parser", parser);
             const base = self.base; const func = self.func;
             return base.parse(input).map(B, func);
