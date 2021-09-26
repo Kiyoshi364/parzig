@@ -15,6 +15,14 @@ pub fn Parser(comptime Val: type) type {
         pub fn map(self: *const Self, comptime T: type, func: fn(Val) T) MappedP(Val, T) {
             return MappedP(Val, T).init(func, self);
         }
+
+        pub fn keep(self: *const Self, comptime T: type, snd: *const Parser(T)) KeepP(Val, T) {
+            return KeepP(Val, T).init(self, snd);
+        }
+
+        pub fn skip(self: *const Self, comptime T: type, snd: *const Parser(T)) SkipP(Val, T) {
+            return SkipP(Val, T).init(self, snd);
+        }
     };
 }
 
@@ -54,6 +62,13 @@ pub fn MaybeParsed(comptime Val: type) type {
                 .err => |err| return .{ .err = err },
                 .data => |data| return .{ .data =
                     .{ .val = func(data.val), .rest = data.rest } },
+            }
+        }
+
+        pub fn t(self: Self, comptime T: type) MaybeParsed(T) {
+            switch (self) {
+                .err => |err| return .{ .err = err },
+                .data => unreachable,
             }
         }
     };
@@ -167,6 +182,64 @@ pub fn MappedP(comptime A: type, comptime B: type) type {
             const self = @fieldParentPtr(@This(), "parser", parser);
             const base = self.base; const func = self.func;
             return base.parse(input).map(B, func);
+        }
+    };
+}
+
+pub fn KeepP(comptime A: type, comptime B: type) type {
+    return struct {
+        fst: *const Parser(A),
+        snd: *const Parser(B),
+        parser: Parser(A),
+
+        pub fn init(fst: *const Parser(A), snd: *const Parser(B)) @This() {
+            return .{ .fst = fst, .snd = snd,
+                .parser = .{ .parseFn = parseFn } };
+        }
+
+        fn parseFn(parser: *const Parser(A), input: Input) MaybeParsed(A) {
+            const self = @fieldParentPtr(@This(), "parser", parser);
+            const ret1 = self.fst.parse(input);
+            switch ( ret1 ) {
+                .err => return ret1,
+                .data => |data| {
+                    const ret2 = self.snd.parse(data.rest);
+                    switch ( ret2 ) {
+                        .err => return ret2.t(A),
+                        .data => |data2| return .{ .data = .{
+                                .val = data.val, .rest = data2.rest }},
+                    }
+                },
+            }
+        }
+    };
+}
+
+pub fn SkipP(comptime A: type, comptime B: type) type {
+    return struct {
+        fst: *const Parser(A),
+        snd: *const Parser(B),
+        parser: Parser(B),
+
+        pub fn init(fst: *const Parser(A), snd: *const Parser(B)) @This() {
+            return .{ .fst = fst, .snd = snd,
+                .parser = .{ .parseFn = parseFn } };
+        }
+
+        fn parseFn(parser: *const Parser(B), input: Input) MaybeParsed(B) {
+            const self = @fieldParentPtr(@This(), "parser", parser);
+            const ret1 = self.fst.parse(input);
+            switch ( ret1 ) {
+                .err => return ret1.t(B),
+                .data => |data| {
+                    const ret2 = self.snd.parse(data.rest);
+                    switch ( ret2 ) {
+                        .err => return ret2,
+                        .data => |data2| return .{ .data = .{
+                                .val = data2.val, .rest = data2.rest }},
+                    }
+                },
+            }
         }
     };
 }

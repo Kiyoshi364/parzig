@@ -99,3 +99,47 @@ test "functor abstraction ok" {
     const ret = functor.parser.parse(input).data;
     try expectEqualParsed(?i8, expected, ret);
 }
+
+test "keep parser ok" {
+    const input = Input.init("something");
+    const fst = parserLib.CharP.init('s');
+    const snd = parserLib.CharP.init('o');
+    const expected = Parsed(u8){ .val = 's',
+        .rest = Input{ .pos = 2, .str = "mething" } };
+    const keepp = parserLib.KeepP(u8, u8).init(&fst.parser, &snd.parser);
+    const ret = keepp.parser.parse(input).data;
+    try expectEqualParsed(u8, expected, ret);
+}
+
+test "keep abstraction ok" {
+    const input = Input.init("something");
+    const fst = parserLib.CharP.init('s');
+    const snd = parserLib.CharP.init('o');
+    const expected = Parsed(u8){ .val = 's',
+        .rest = Input{ .pos = 2, .str = "mething" } };
+    const keepp = fst.parser.keep(u8, &snd.parser);
+    const ret = keepp.parser.parse(input).data;
+    try expectEqualParsed(u8, expected, ret);
+}
+
+test "skip parser ok" {
+    const input = Input.init("something");
+    const fst = parserLib.CharP.init('s');
+    const snd = parserLib.CharP.init('o');
+    const expected = Parsed(u8){ .val = 'o',
+        .rest = Input{ .pos = 2, .str = "mething" } };
+    const skipp = parserLib.SkipP(u8, u8).init(&fst.parser, &snd.parser);
+    const ret = skipp.parser.parse(input).data;
+    try expectEqualParsed(u8, expected, ret);
+}
+
+test "skip abstraction ok" {
+    const input = Input.init("something");
+    const fst = parserLib.CharP.init('s');
+    const snd = parserLib.CharP.init('o');
+    const expected = Parsed(u8){ .val = 'o',
+        .rest = Input{ .pos = 2, .str = "mething" } };
+    const skipp = fst.parser.skip(u8, &snd.parser);
+    const ret = skipp.parser.parse(input).data;
+    try expectEqualParsed(u8, expected, ret);
+}
