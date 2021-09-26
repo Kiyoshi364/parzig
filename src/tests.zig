@@ -14,7 +14,8 @@ fn expectEqualInput(a: Input, b: Input) !void {
 }
 
 fn expectEqualParsed(comptime T: type, a: Parsed(T), b: Parsed(T)) !void {
-    try expectEqual(a.val, b.val);
+    try if ( T == []const u8 ) expectEqualStrings(a.val, b.val)
+        else expectEqual(a.val, b.val);
     try expectEqualInput(a.rest, b.rest);
 }
 
@@ -56,6 +57,24 @@ test "pred parser ok" {
     const predp = parserLib.PredP.init(isLower);
     const ret = predp.parser.parse(input).data;
     try expectEqualParsed(u8, expected, ret);
+}
+
+test "span parser ok" {
+    const input = Input.init("someThing");
+    const expected = Parsed([]const u8){ .val = "some",
+        .rest = Input{ .pos = 4, .str = "Thing" } };
+    const spanp = parserLib.SpanP.init(isLower);
+    const ret = spanp.parser.parse(input).data;
+    try expectEqualParsed([]const u8, expected, ret);
+}
+
+test "span parser everything" {
+    const input = Input.init("everything");
+    const expected = Parsed([]const u8){ .val = "everything",
+        .rest = Input{ .pos = 10, .str = "" } };
+    const spanp = parserLib.SpanP.init(isLower);
+    const ret = spanp.parser.parse(input).data;
+    try expectEqualParsed([]const u8, expected, ret);
 }
 
 test "option parser ok" {

@@ -146,6 +146,26 @@ pub const PredP = struct {
     }
 };
 
+pub const SpanP = struct {
+    pred: fn(u8) bool,
+    parser: Parser([]const u8),
+
+    pub fn init(pred: fn(u8) bool) @This() {
+        return .{ .pred = pred, .parser = .{ .parseFn = parserFn } };
+    }
+
+    fn parserFn(parser: *const Parser([]const u8), input: Input) MaybeParsed([]const u8) {
+        const pred = @fieldParentPtr(@This(), "parser", parser).pred;
+        const str = input.str;
+        var i: usize = 0;
+        while ( i < str.len ) : ( i += 1 ) {
+            if ( !pred(str[i]) )
+                break;
+        }
+        return .{ .data = .{ .val = str[0..i], .rest = input.add(i) } };
+    }
+};
+
 pub fn OptionP(comptime T: type) type {
     return struct {
         base: *const Parser(T),
