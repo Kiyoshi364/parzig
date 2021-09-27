@@ -22,9 +22,9 @@ pub fn main() !void {
     // Ignoring <CR><LF>
     const trim = if (std.builtin.os.tag == .windows) 2 else 1;
     const read = (try stdin.read(&buffer)) - trim;
-    const input = parzig.Input{ .str = buffer[0..read] };
+    const input = buffer[0..read];
 
-    print("input({}): {s}<LF>\n", .{ read, input.str });
+    print("input({}): {s}<LF>\n", .{ read, input });
 
     const p = comptime blk: {
         const quote = CharP.init('"');

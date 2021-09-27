@@ -15,8 +15,12 @@ pub fn Parser(comptime V: type) type {
 
         parseFn: ParseFunc(Val),
 
-        pub fn parse(self: *const Self, input: Input) MaybeParsed(Val) {
-            return self.parseFn(self, input);
+        pub fn parse(self: *const Self, input: anytype) MaybeParsed(Val) {
+            if ( @TypeOf(input) == Input ) {
+                return self.parseFn(self, input);
+            } else {
+                return self.parseFn(self, Input.init(input));
+            }
         }
 
         pub fn map(self: *const Self, func: anytype) MappedT(func, self) {

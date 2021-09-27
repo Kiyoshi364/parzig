@@ -27,13 +27,13 @@ test "advancing input" {
 }
 
 test "failing parser fail" {
-    const input = Input.init("something");
+    const input = "something";
     const failp = blocks.FailP(u8).init();
     _ = failp.parser.parse(input).err;
 }
 
 test "const parser ok" {
-    const input = Input.init("something");
+    const input = "something";
     const expected = Parsed(bool){ .val = true,
         .rest = Input{ .str = "something" } };
     const constp = blocks.ConstP(bool).init(true);
@@ -42,7 +42,7 @@ test "const parser ok" {
 }
 
 test "char parser ok" {
-    const input = Input.init("something");
+    const input = "something";
     const expected = Parsed(u8){ .val = 's',
         .rest = Input{ .pos = 1, .str = "omething" } };
     const charp = blocks.CharP.init('s');
@@ -52,7 +52,7 @@ test "char parser ok" {
 
 fn isLower(c: u8) bool { return 'a' <= c and c <= 'z'; }
 test "pred parser ok" {
-    const input = Input.init("something");
+    const input = "something";
     const expected = Parsed(u8){ .val = 's',
         .rest = Input{ .pos = 1, .str = "omething" } };
     const predp = blocks.PredP.init(isLower);
@@ -61,7 +61,7 @@ test "pred parser ok" {
 }
 
 test "span parser ok" {
-    const input = Input.init("someThing");
+    const input = "someThing";
     const expected = Parsed([]const u8){ .val = "some",
         .rest = Input{ .pos = 4, .str = "Thing" } };
     const spanp = blocks.SpanP.init(isLower);
@@ -70,7 +70,7 @@ test "span parser ok" {
 }
 
 test "span parser everything" {
-    const input = Input.init("everything");
+    const input = "everything";
     const expected = Parsed([]const u8){ .val = "everything",
         .rest = Input{ .pos = 10, .str = "" } };
     const spanp = blocks.SpanP.init(isLower);
@@ -79,7 +79,7 @@ test "span parser everything" {
 }
 
 test "option parser ok" {
-    const input = Input.init("something");
+    const input = "something";
     const base = blocks.CharP.init('s');
     const expected = Parsed(?u8){ .val = 's',
         .rest = Input{ .pos = 1, .str = "omething" } };
@@ -89,7 +89,7 @@ test "option parser ok" {
 }
 
 test "option parser null" {
-    const input = Input.init("something");
+    const input = "something";
     const base = blocks.CharP.init('o');
     const expected = Parsed(?u8){ .val = null,
         .rest = Input{ .pos = 0, .str = "something" } };
@@ -101,7 +101,7 @@ test "option parser null" {
 fn truu(_: u8) bool { return true; }
 fn toDigit(d: u8) ?i8 { return if ('0' <= d and d <= '9') @intCast(i8, d) - '0' else null; }
 test "mapped parser ok" {
-    const input = Input.init("1something");
+    const input = "1something";
     const base = blocks.PredP.init(truu);
     const expected = Parsed(?i8){ .val = 1,
         .rest = Input{ .pos = 1, .str = "something" } };
@@ -111,7 +111,7 @@ test "mapped parser ok" {
 }
 
 test "functor abstraction ok" {
-    const input = Input.init("1something");
+    const input = "1something";
     const expected = Parsed(?i8){ .val = 1,
         .rest = Input{ .pos = 1, .str = "something" } };
     const base = comptime blocks.PredP.init(truu);
@@ -121,7 +121,7 @@ test "functor abstraction ok" {
 }
 
 test "keep parser ok" {
-    const input = Input.init("something");
+    const input = "something";
     const fst = blocks.CharP.init('s');
     const snd = blocks.CharP.init('o');
     const expected = Parsed(u8){ .val = 's',
@@ -132,7 +132,7 @@ test "keep parser ok" {
 }
 
 test "keep abstraction ok" {
-    const input = Input.init("something");
+    const input = "something";
     const fst = blocks.CharP.init('s');
     const snd = blocks.CharP.init('o');
     const expected = Parsed(u8){ .val = 's',
@@ -143,7 +143,7 @@ test "keep abstraction ok" {
 }
 
 test "skip parser ok" {
-    const input = Input.init("something");
+    const input = "something";
     const fst = blocks.CharP.init('s');
     const snd = blocks.CharP.init('o');
     const expected = Parsed(u8){ .val = 'o',
@@ -154,7 +154,7 @@ test "skip parser ok" {
 }
 
 test "skip abstraction ok" {
-    const input = Input.init("something");
+    const input = "something";
     const fst = blocks.CharP.init('s');
     const snd = blocks.CharP.init('o');
     const expected = Parsed(u8){ .val = 'o',
