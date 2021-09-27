@@ -32,6 +32,10 @@ pub fn build(b: *std.build.Builder) void {
     var main_tests = b.addTest("src/tests.zig");
     main_tests.setBuildMode(mode);
 
+    var comb_tests = b.addTest("src/combinators.zig");
+    comb_tests.setBuildMode(mode);
+
     const test_step = b.step("test", "Run library tests");
+    test_step.dependOn(&comb_tests.step);
     test_step.dependOn(&main_tests.step);
 }

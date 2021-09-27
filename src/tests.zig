@@ -14,7 +14,7 @@ fn expectEqualInput(a: Input, b: Input) !void {
     try expectEqualStrings(a.str, b.str);
 }
 
-fn expectEqualParsed(comptime T: type, a: Parsed(T), b: Parsed(T)) !void {
+pub fn expectEqualParsed(comptime T: type, a: Parsed(T), b: Parsed(T)) !void {
     try if ( T == []const u8 ) expectEqualStrings(a.val, b.val)
         else expectEqual(a.val, b.val);
     try expectEqualInput(a.rest, b.rest);
@@ -98,7 +98,7 @@ test "option parser null" {
     try expectEqualParsed(?u8, expected, ret);
 }
 
-fn truu(c: u8) bool { _ = c; return true; }
+fn truu(_: u8) bool { return true; }
 fn toDigit(d: u8) ?i8 { return if ('0' <= d and d <= '9') @intCast(i8, d) - '0' else null; }
 test "mapped parser ok" {
     const input = Input.init("1something");
@@ -114,8 +114,8 @@ test "functor abstraction ok" {
     const input = Input.init("1something");
     const expected = Parsed(?i8){ .val = 1,
         .rest = Input{ .pos = 1, .str = "something" } };
-    const base = blocks.PredP.init(truu);
-    const functor = base.parser.map(?i8, toDigit);
+    const base = comptime blocks.PredP.init(truu);
+    const functor = comptime base.parser.map(toDigit);
     const ret = functor.parser.parse(input).data;
     try expectEqualParsed(?i8, expected, ret);
 }

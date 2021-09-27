@@ -11,8 +11,7 @@ pub fn FailP(comptime T: type) type {
             return .{ .parser = .{ .parseFn = parserFn } };
         }
 
-        fn parserFn(parser: *const Parser(T), input: Input) MaybeParsed(T) {
-            _ = parser;
+        fn parserFn(_: *const Parser(T), input: Input) MaybeParsed(T) {
             return .{ .err = input.err() };
         }
     };

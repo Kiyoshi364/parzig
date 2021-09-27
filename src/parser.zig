@@ -1,13 +1,15 @@
 pub const blocks = @import("blocks.zig");
+pub const combinators = @import("combinators.zig");
 
 pub fn ParseFunc(comptime T: type) type {
     return fn(*const Parser(T), Input) MaybeParsed(T);
 }
 
-pub fn Parser(comptime Val: type) type {
+pub fn Parser(comptime V: type) type {
     return struct {
         const Self = @This();
-        const MappedP = blocks.MappedP;
+        pub const Val = V;
+        const MappedT = combinators.MappedT;
         const KeepP = blocks.KeepP;
         const SkipP = blocks.SkipP;
 
@@ -17,8 +19,8 @@ pub fn Parser(comptime Val: type) type {
             return self.parseFn(self, input);
         }
 
-        pub fn map(self: *const Self, comptime T: type, func: fn(Val) T) MappedP(Val, T) {
-            return MappedP(Val, T).init(func, self);
+        pub fn map(self: *const Self, func: anytype) MappedT(func, self) {
+            return MappedT(func, self).init(func, self);
         }
 
         pub fn keep(self: *const Self, comptime T: type, snd: *const Parser(T)) KeepP(Val, T) {
@@ -55,9 +57,10 @@ pub const Error = struct {
     pos: usize = 0,
 };
 
-pub fn MaybeParsed(comptime Val: type) type {
+pub fn MaybeParsed(comptime V: type) type {
     return union(enum) {
         const Self = @This();
+        pub const Val = V;
 
         err: Error,
         data: Parsed(Val),
@@ -81,6 +84,7 @@ pub fn MaybeParsed(comptime Val: type) type {
 
 pub fn Parsed(comptime Val: type) type {
     return struct {
+        pub const Val = Val;
         val: Val,
         rest: Input,
     };
