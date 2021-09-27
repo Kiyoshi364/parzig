@@ -1,11 +1,11 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
-const parser_lib = @import("parser.zig");
-const Parser = parser_lib.Parser;
-const MaybeParsed = parser_lib.MaybeParsed;
-const Parsed = parser_lib.Parsed;
-const Input = parser_lib.Input;
+const parzig = @import("parzig.zig");
+const Parser = parzig.Parser;
+const MaybeParsed = parzig.MaybeParsed;
+const Parsed = parzig.Parsed;
+const Input = parzig.Input;
 
 const blocks = @import("blocks.zig");
 const MappedP = blocks.MappedP;

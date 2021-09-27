@@ -1,7 +1,7 @@
-const parser_lib = @import("parser.zig");
-const Parser = parser_lib.Parser;
-const MaybeParsed = parser_lib.MaybeParsed;
-const Input = parser_lib.Input;
+const parzig = @import("parzig.zig");
+const Parser = parzig.Parser;
+const MaybeParsed = parzig.MaybeParsed;
+const Input = parzig.Input;
 
 pub fn FailP(comptime T: type) type {
     return struct {

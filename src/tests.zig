@@ -1,8 +1,8 @@
-const parser = @import("parser.zig");
-const Parser = parser.Parser;
-const Parsed = parser.Parsed;
-const Input = parser.Input;
-const blocks = parser.blocks;
+const parzig = @import("parzig.zig");
+const Parser = parzig.Parser;
+const Parsed = parzig.Parsed;
+const Input = parzig.Input;
+const blocks = parzig.blocks;
 
 const std = @import("std");
 const testing = std.testing;

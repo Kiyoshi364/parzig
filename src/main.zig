@@ -2,10 +2,10 @@ const std = @import("std");
 const debug = std.debug;
 const print = debug.print;
 
-const P = @import("parser.zig");
-const Parser = P.Parser;
-const blocks = P.blocks;
-const combi = P.combinators;
+const parzig = @import("parzig.zig");
+const Parser = parzig.Parser;
+const blocks = parzig.blocks;
+const combi = parzig.combinators;
 const CharP = blocks.CharP;
 const SpanP = blocks.SpanP;
 
@@ -22,7 +22,7 @@ pub fn main() !void {
     // Ignoring <CR><LF>
     const trim = if (std.builtin.os.tag == .windows) 2 else 1;
     const read = (try stdin.read(&buffer)) - trim;
-    const input = P.Input{ .str = buffer[0..read] };
+    const input = parzig.Input{ .str = buffer[0..read] };
 
     print("input({}): {s}<LF>\n", .{ read, input.str });
 
