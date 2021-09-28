@@ -26,6 +26,15 @@ test "advancing input" {
     try expectEqualInput(expected, input.add(4));
 }
 
+test "ok parser ok" {
+    const input = "something";
+    const okp = blocks.OkP.init();
+    const expected = Parsed(void){ .val = .{},
+        .rest = Input{ .str = "something" } };
+    const ret = okp.parser.parse(input).data;
+    try expectEqualParsed(void, expected, ret);
+}
+
 test "failing parser fail" {
     const input = "something";
     const failp = blocks.FailP(u8).init();

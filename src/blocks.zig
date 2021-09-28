@@ -3,6 +3,18 @@ const Parser = parzig.Parser;
 const MaybeParsed = parzig.MaybeParsed;
 const Input = parzig.Input;
 
+pub const OkP = struct {
+    parser: Parser(void),
+
+    pub fn init() @This() {
+        return .{ .parser = .{ .parseFn = parserFn } };
+    }
+
+    fn parserFn(_: *const Parser(void), input: Input) MaybeParsed(void) {
+        return .{ .data = .{ .val = .{}, .rest = input } };
+    }
+};
+
 pub fn FailP(comptime T: type) type {
     return struct {
         parser: Parser(T),
