@@ -1,6 +1,7 @@
 const parzig = @import("parzig.zig");
 const Parser = parzig.Parser;
 const Parsed = parzig.Parsed;
+const Error = parzig.Error;
 const Input = parzig.Input;
 const blocks = parzig.blocks;
 
@@ -20,6 +21,10 @@ pub fn expectEqualParsed(comptime T: type, a: Parsed(T), b: Parsed(T)) !void {
     try expectEqualInput(a.rest, b.rest);
 }
 
+fn expectEqualErr(a: Error, b: Error) !void {
+    try expectEqual(a, b);
+}
+
 test "advancing input" {
     const input = Input.init("something");
     const expected = Input{ .pos = 4, .str = "thing"};
@@ -37,8 +42,10 @@ test "ok parser ok" {
 
 test "failing parser fail" {
     const input = "something";
+    const expected = .{ .pos = 0 };
     const failp = blocks.FailP(u8).init();
-    _ = failp.parser.parse(input).err;
+    const err = failp.parser.parse(input).err;
+    try expectEqualErr(expected, err);
 }
 
 test "const parser ok" {
